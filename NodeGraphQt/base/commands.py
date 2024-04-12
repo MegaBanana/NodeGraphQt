@@ -328,8 +328,8 @@ class PortConnectedCmd(QtWidgets.QUndoCommand):
         if self.emit_signal:
             ports = {p.type_(): p for p in [self.source, self.target]}
             graph = self.source.node().graph
-            graph.port_disconnected.emit(ports[PortTypeEnum.IN.value],
-                                         ports[PortTypeEnum.OUT.value])
+            graph.port_disconnected.emit(self.source,
+                                         self.target)
 
     def redo(self):
         src_model = self.source.model
@@ -344,10 +344,9 @@ class PortConnectedCmd(QtWidgets.QUndoCommand):
 
         # emit "port_connected" signal from the parent graph.
         if self.emit_signal:
-            ports = {p.type_(): p for p in [self.source, self.target]}
             graph = self.source.node().graph
-            graph.port_connected.emit(ports[PortTypeEnum.IN.value],
-                                      ports[PortTypeEnum.OUT.value])
+            graph.port_connected.emit(self.source,
+                                      self.target)
 
 
 class PortDisconnectedCmd(QtWidgets.QUndoCommand):
@@ -381,8 +380,8 @@ class PortDisconnectedCmd(QtWidgets.QUndoCommand):
         if self.emit_signal:
             ports = {p.type_(): p for p in [self.source, self.target]}
             graph = self.source.node().graph
-            graph.port_connected.emit(ports[PortTypeEnum.IN.value],
-                                      ports[PortTypeEnum.OUT.value])
+            graph.port_connected.emit(self.source,
+                                      self.target)
 
     def redo(self):
         src_model = self.source.model
@@ -408,8 +407,8 @@ class PortDisconnectedCmd(QtWidgets.QUndoCommand):
         if self.emit_signal:
             ports = {p.type_(): p for p in [self.source, self.target]}
             graph = self.source.node().graph
-            graph.port_disconnected.emit(ports[PortTypeEnum.IN.value],
-                                         ports[PortTypeEnum.OUT.value])
+            graph.port_disconnected.emit(self.source,
+                                         self.target)
 
 
 class PortLockedCmd(QtWidgets.QUndoCommand):

@@ -200,7 +200,10 @@ class PipeItem(QtWidgets.QGraphicsPathItem):
         path.lineTo(end_pos)
         self.setPath(path)
 
-    def _draw_path_vertical(self, start_port, pos1, pos2, path):
+
+
+
+    def _draw_path_vertical(self, start_port, end_port, pos1, pos2, path):
         """
         Draws the vertical path between ports.
 
@@ -209,6 +212,9 @@ class PipeItem(QtWidgets.QGraphicsPathItem):
             pos1 (QPointF): start port position.
             pos2 (QPointF): end port position.
             path (QPainterPath): path to draw.
+            
+            offset (float): the offset to apply for the more complex circuit
+
         """
         if self.viewer_pipe_layout() == PipeLayoutEnum.CURVED.value:
             ctr_offset_y1, ctr_offset_y2 = pos1.y(), pos2.y()
@@ -227,24 +233,48 @@ class PipeItem(QtWidgets.QGraphicsPathItem):
             ctr_point2 = QtCore.QPointF(pos2.x(), ctr_offset_y2)
             path.cubicTo(ctr_point1, ctr_point2, pos2)
             self.setPath(path)
-        elif self.viewer_pipe_layout() == PipeLayoutEnum.ANGLE.value:
-            ctr_offset_y1, ctr_offset_y2 = pos1.y(), pos2.y()
-            distance = abs(ctr_offset_y1 - ctr_offset_y2)/2
-            if start_port.port_type == PortTypeEnum.IN.value:
-                ctr_offset_y1 -= distance
-                ctr_offset_y2 += distance
-            else:
-                ctr_offset_y1 += distance
-                ctr_offset_y2 -= distance
+        elif self.viewer_pipe_layout() == PipeLayoutEnum.ANGLE.value:          
 
-            ctr_point1 = QtCore.QPointF(pos1.x(), ctr_offset_y1)
-            ctr_point2 = QtCore.QPointF(pos2.x(), ctr_offset_y2)
-            path.lineTo(ctr_point1)
-            path.lineTo(ctr_point2)
-            path.lineTo(pos2)
+            # start at p1
+            path.lineTo(pos1)
+
+            # there are two cases, one where an output is connected
+            # to an input, but the input is "behind" the output, i.e.
+            # the x-value of the input is smaller than the output port
+            
+            # the other case is simpler, where the output port x value is 
+            # smaller than the input port
+            
+            # first calculate the simple x-distance
+            simple_distance_y = pos2.y() - pos1.y()
+            mid_point_x = (pos1.x() + pos2.x()) / 2
+            mid_point_y = (pos1.y() + pos2.y()) / 2
+
+            
+            if ((simple_distance_y > 0 and start_port.port_type == PortTypeEnum.OUT.value) or
+                (simple_distance_y < 0 and start_port.port_type == PortTypeEnum.IN.value)):
+                    
+                # this is the simplest case
+                path.lineTo(QtCore.QPointF(pos1.x(), mid_point_y))
+                path.lineTo(QtCore.QPointF(pos2.x(), mid_point_y))
+                path.lineTo(QtCore.QPointF(pos2))
+                    
+            else:
+                
+                # we need a slightly more complex circuit but not too bad
+                path.lineTo(QtCore.QPointF(pos1.x(), pos1.y() - offset))
+                path.lineTo(QtCore.QPointF(mid_point_x, pos1.y() - offset))
+                path.lineTo(QtCore.QPointF(mid_point_x, pos2.y() + offset))
+                path.lineTo(QtCore.QPointF(pos2.x(), pos2.y() + offset, ))
+                    
+
+            # end at p2
+            path.lineTo(QtCore.QPointF(pos2))
+
             self.setPath(path)
 
-    def _draw_path_horizontal(self, start_port, pos1, pos2, path):
+    def _draw_path_horizontal(self, start_port, end_port, pos1, pos2, path,
+                            offset = 30):
         """
         Draws the horizontal path between ports.
 
@@ -253,6 +283,8 @@ class PipeItem(QtWidgets.QGraphicsPathItem):
             pos1 (QPointF): start port position.
             pos2 (QPointF): end port position.
             path (QPainterPath): path to draw.
+            
+            offset (float): the offset to apply for the more complex circuit
         """
         if self.viewer_pipe_layout() == PipeLayoutEnum.CURVED.value:
             ctr_offset_x1, ctr_offset_x2 = pos1.x(), pos2.x()
@@ -272,22 +304,69 @@ class PipeItem(QtWidgets.QGraphicsPathItem):
             path.cubicTo(ctr_point1, ctr_point2, pos2)
             self.setPath(path)
         elif self.viewer_pipe_layout() == PipeLayoutEnum.ANGLE.value:
-            ctr_offset_x1, ctr_offset_x2 = pos1.x(), pos2.x()
-            distance = abs(ctr_offset_x1 - ctr_offset_x2) / 2
-            if start_port.port_type == PortTypeEnum.IN.value:
-                ctr_offset_x1 -= distance
-                ctr_offset_x2 += distance
+
+            # start at p1
+            path.lineTo(pos1)
+
+            # With same type port connection allowed it slighty more complex:
+            # If the port are of same type then
+            #
+            # If the port are of different type then
+            # there are two cases, one where an output is connected
+            # to an input, but the input is "behind" the output, i.e.
+            # the x-value of the input is smaller than the output port
+            
+            # the other case is simpler, where the output port x value is 
+            # smaller than the input port
+
+            
+            # first calculate the simple x-distance
+            simple_distance_x = pos2.x() - pos1.x()
+            mid_point_x = (pos1.x() + pos2.x()) / 2
+            mid_point_y = (pos1.y() + pos2.y()) / 2
+
+
+            
+            if end_port.port_type != start_port.port_type:
+                if ((simple_distance_x > 0 and start_port.port_type == PortTypeEnum.OUT.value) or
+                    (simple_distance_x < 0 and start_port.port_type == PortTypeEnum.IN.value)):
+                        
+                    # this is the simplest case
+                    path.lineTo(QtCore.QPointF(mid_point_x , pos1.y()))
+                    path.lineTo(QtCore.QPointF(mid_point_x , pos2.y()))
+                    path.lineTo(QtCore.QPointF(pos2))
+                        
+                else:
+                    
+                    # we need a slightly more complex circuit but not too bad
+                    path.lineTo(QtCore.QPointF(pos1.x() - offset, pos1.y()))
+                    path.lineTo(QtCore.QPointF(pos1.x() - offset, mid_point_y))
+                    path.lineTo(QtCore.QPointF(pos2.x() + offset, mid_point_y))
+                    path.lineTo(QtCore.QPointF(pos2.x() + offset, pos2.y()))
             else:
-                ctr_offset_x1 += distance
-                ctr_offset_x2 -= distance
+                if start_port.port_type == PortTypeEnum.OUT.value:
+                    if simple_distance_x > 0:
+                        path.lineTo(QtCore.QPointF(pos2.x() + offset, pos1.y()))
+                        path.lineTo(QtCore.QPointF(pos2.x() + offset, pos2.y()))
+                    else:                 
+                        # we need a slightly more complex circuit but not too bad
+                        path.lineTo(QtCore.QPointF(pos1.x() + offset, pos1.y()))
+                        path.lineTo(QtCore.QPointF(pos1.x() + offset, pos2.y()))
+                elif start_port.port_type == PortTypeEnum.IN.value:
+                    if simple_distance_x < 0:
+                        path.lineTo(QtCore.QPointF(pos2.x() - offset, pos1.y()))
+                        path.lineTo(QtCore.QPointF(pos2.x() - offset, pos2.y()))
+                    else:                 
+                        # we need a slightly more complex circuit but not too bad
+                        path.lineTo(QtCore.QPointF(pos1.x() - offset, pos1.y()))
+                        path.lineTo(QtCore.QPointF(pos1.x() - offset, pos2.y()))
 
-            ctr_point1 = QtCore.QPointF(ctr_offset_x1, pos1.y())
-            ctr_point2 = QtCore.QPointF(ctr_offset_x2, pos2.y())
-            path.lineTo(ctr_point1)
-            path.lineTo(ctr_point2)
-            path.lineTo(pos2)
+
+            # end at p2
+            path.lineTo(QtCore.QPointF(pos2))
+
             self.setPath(path)
-
+        
     def draw_path(self, start_port, end_port=None, cursor_pos=None):
         """
         Draws the path between ports.
@@ -357,9 +436,9 @@ class PipeItem(QtWidgets.QGraphicsPathItem):
             return
 
         if direction is LayoutDirectionEnum.VERTICAL.value:
-            self._draw_path_vertical(start_port, pos1, pos2, path)
+            self._draw_path_vertical(start_port, end_port, pos1, pos2, path)
         elif direction is LayoutDirectionEnum.HORIZONTAL.value:
-            self._draw_path_horizontal(start_port, pos1, pos2, path)
+            self._draw_path_horizontal(start_port, end_port, pos1, pos2, path)
 
         self._draw_direction_pointer()
 
@@ -477,14 +556,10 @@ class PipeItem(QtWidgets.QGraphicsPathItem):
             port1 (PortItem): port item object.
             port2 (PortItem): port item object.
         """
-        ports = {
-            port1.port_type: port1,
-            port2.port_type: port2
-        }
-        self.input_port = ports[PortTypeEnum.IN.value]
-        self.output_port = ports[PortTypeEnum.OUT.value]
-        ports[PortTypeEnum.IN.value].add_pipe(self)
-        ports[PortTypeEnum.OUT.value].add_pipe(self)
+        self.input_port = port1
+        self.output_port = port2
+        port1.add_pipe(self)
+        port2.add_pipe(self)
 
     def disabled(self):
         """
@@ -594,7 +669,7 @@ class LivePipeItem(PipeItem):
                 will be the draw end point.
             color (list[int]): override arrow index pointer color. (r, g, b)
         """
-        super(LivePipeItem, self).draw_path(start_port, end_port, cursor_pos)
+        #super(LivePipeItem, self).draw_path(start_port, end_port, cursor_pos)
         self.draw_index_pointer(start_port, cursor_pos, color)
 
     def draw_index_pointer(self, start_port, cursor_pos, color=None):

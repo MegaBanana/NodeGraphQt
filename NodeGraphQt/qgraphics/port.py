@@ -140,10 +140,7 @@ class PortItem(QtWidgets.QGraphicsItem):
         if not self.connected_pipes:
             return
         for pipe in self.connected_pipes:
-            if self.port_type == PortTypeEnum.IN.value:
-                pipe.draw_path(self, pipe.output_port)
-            elif self.port_type == PortTypeEnum.OUT.value:
-                pipe.draw_path(pipe.input_port, self)
+            pipe.draw_path(pipe.input_port, pipe.output_port)
 
     def add_pipe(self, pipe):
         self._pipes.append(pipe)

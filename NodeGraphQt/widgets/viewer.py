@@ -876,7 +876,7 @@ class NodeViewer(QtWidgets.QGraphicsView):
             if not self.LMB_state:
                 return
 
-            from_port = pipe.port_from_pos(pos, True)
+            from_port = pipe.port_from_pos(pos)
 
             if from_port.locked:
                 return
@@ -1055,7 +1055,7 @@ class NodeViewer(QtWidgets.QGraphicsView):
             # if the end port is locked.
             end_port.locked,
             # if same port type.
-            end_port.port_type == self._start_port.port_type,
+            #end_port.port_type == self._start_port.port_type,
             # if connection to itself.
             same_node_connection,
             # if end port is the start port.
