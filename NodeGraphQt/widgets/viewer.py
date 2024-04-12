@@ -876,7 +876,7 @@ class NodeViewer(QtWidgets.QGraphicsView):
             if not self.LMB_state:
                 return
 
-            from_port = pipe.port_from_pos(pos)
+            from_port = pipe.port_from_pos(pos, True)
 
             if from_port.locked:
                 return
@@ -887,7 +887,8 @@ class NodeViewer(QtWidgets.QGraphicsView):
                 PortTypeEnum.IN.value: 'output_port',
                 PortTypeEnum.OUT.value: 'input_port'
             }
-            self._detached_port = getattr(pipe, attr[from_port.port_type])
+            #self._detached_port = getattr(pipe, attr[from_port.port_type])
+            self._detached_port = pipe.opposite_port(from_port)
             self.start_live_connection(from_port)
             self._LIVE_PIPE.draw_path(self._start_port, cursor_pos=pos)
 

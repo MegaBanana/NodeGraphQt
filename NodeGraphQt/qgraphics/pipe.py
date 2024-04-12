@@ -556,8 +556,8 @@ class PipeItem(QtWidgets.QGraphicsPathItem):
             port1 (PortItem): port item object.
             port2 (PortItem): port item object.
         """
-        self.input_port = port1
-        self.output_port = port2
+        self.output_port = port1
+        self.input_port = port2
         port1.add_pipe(self)
         port2.add_pipe(self)
 
@@ -572,6 +572,14 @@ class PipeItem(QtWidgets.QGraphicsPathItem):
             return True
         return False
 
+
+    def opposite_port(self, port):
+        if port == self._input_port:
+            return self._output_port
+        elif port == self._output_port:
+            return self._input_port
+        else:
+            raise ValueError("L'objet donné ne fait pas partie du binôme.")
     @property
     def input_port(self):
         return self._input_port
