@@ -610,6 +610,24 @@ class BaseNode(NodeObject):
          for port in port_data['output_ports']]
         self._view.draw_node()
 
+    def get_port_from_name(self, p_name):
+        """
+        Returns port from the given name
+
+        Args:
+            p_name (str): name of the port
+        """
+        return self.ports().get(p_name, None)
+
+    def ports(self):
+        """
+        Returns all the ports from the node
+
+        Returns:
+            dict: {<port_name>: <port_object>}
+        """
+        return {p.name(): p for p in (self._inputs + self._outputs)}
+    
     def inputs(self):
         """
         Returns all the input ports from the node.
@@ -691,6 +709,26 @@ class BaseNode(NodeObject):
         """
         src_port = self.output(index)
         src_port.connect_to(port)
+
+    def connect_ports(self, portName, dest_port):
+        """Connect the port of portName to dest_port
+
+        Args:
+            portName (str): the string of self port name
+            dest_port (BasePort): the port to which the connection is done
+
+        Raises:
+            PortError: _description_
+        """
+        if portName in self.outputs().keys():
+            v_port = self.outputs().get(portName)
+        elif portName in self.inputs().keys():
+            v_port = self.inputs().get(portName)
+        else:
+            raise PortError("TBD")
+        
+        v_port.connect_to(dest_port)
+
 
     def connected_input_nodes(self):
         """

@@ -738,6 +738,21 @@ class NodeViewer(QtWidgets.QGraphicsView):
             self._cursor_text.setPos(self.mapToScene(self._previous_pos))
             self._cursor_text.setVisible(True)
 
+
+        # move the selected node according to arrow direction key released
+        x = y = 0
+        offset = 0.1
+        if event.key() == QtCore.Qt.Key_Up:
+            y -= 0.1
+        elif event.key() == QtCore.Qt.Key_Down:
+            y += 0.1
+        elif event.key() == QtCore.Qt.Key_Left:
+            x -= 0.1
+        elif event.key() == QtCore.Qt.Key_Right:
+            x += 0.1
+
+        self.move_nodes(self.selected_nodes(),(x,y))
+
         super(NodeViewer, self).keyPressEvent(event)
 
     def keyReleaseEvent(self, event):
@@ -758,6 +773,7 @@ class NodeViewer(QtWidgets.QGraphicsView):
         # hide and reset cursor text.
         self._cursor_text.setPlainText('')
         self._cursor_text.setVisible(False)
+
 
     # --- scene events ---
 
