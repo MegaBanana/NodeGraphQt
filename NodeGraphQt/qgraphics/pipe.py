@@ -36,9 +36,16 @@ class PipeItem(QtWidgets.QGraphicsPathItem):
         self._color = PipeEnum.COLOR.value
         self._style = PipeEnum.DRAW_TYPE_DEFAULT.value
         self._active = False
+        self._animated = False
         self._highlight = False
         self._input_port = input_port
         self._output_port = output_port
+
+        self.animation_timer = QtCore.QTimer()
+        self.animation_timer.timeout.connect(self.update_animation)
+        self.animation_offset = 0
+        self.animation_iter = 1
+
 
         size = 6.0
         self._poly = QtGui.QPolygonF()
@@ -92,11 +99,16 @@ class PipeItem(QtWidgets.QGraphicsPathItem):
         painter.save()
 
         pen = self.pen()
+            
         if self.disabled():
             if not self._active:
                 pen.setColor(QtGui.QColor(*PipeEnum.DISABLED_COLOR.value))
                 pen.setStyle(PIPE_STYLES.get(PipeEnum.DRAW_TYPE_DOTTED.value))
                 pen.setWidth(3)
+
+        elif self.animated:
+            pen.setStyle(PIPE_STYLES.get(PipeEnum.DRAW_TYPE_DASHED.value))
+            pen.setDashOffset(self.animation_offset)
 
         painter.setPen(pen)
         painter.setBrush(self.brush())
@@ -105,6 +117,33 @@ class PipeItem(QtWidgets.QGraphicsPathItem):
 
         # QPaintDevice: Cannot destroy paint device that is being painted.
         painter.restore()
+
+    def set_color(self, p_color):
+        """Set color of pen use to paint the pipe
+
+        Args:
+            p_color (_type_): _description_
+        """
+        pen = self.pen()
+        pen.setStyle(p_color)
+        
+
+    def set_animated(self, animated, v_fromNode="", v_targetNode=""):
+        if (v_fromNode == self.output_port.node.name) and (v_targetNode == self.input_port.node.name):
+            self.animation_iter = 1
+        else:
+            self.animation_iter = -1
+
+        if self._animated != animated:
+            self._animated = animated
+            if self._animated:
+                self.animation_timer.start(50)  # Change the update interval as needed
+            else:
+                self.animation_timer.stop()
+        
+    def update_animation(self):
+        self.animation_offset += self.animation_iter  # Adjust the offset value as needed
+        self.update()  # Redraw the item
 
     @staticmethod
     def _calc_distance(p1, p2):
@@ -560,6 +599,7 @@ class PipeItem(QtWidgets.QGraphicsPathItem):
         self.input_port = port2
         port1.add_pipe(self)
         port2.add_pipe(self)
+        
 
     def disabled(self):
         """
@@ -580,6 +620,11 @@ class PipeItem(QtWidgets.QGraphicsPathItem):
             return self._input_port
         else:
             raise ValueError("L'objet donné ne fait pas partie du binôme.")
+        
+    @property
+    def animated(self):
+        return self._animated
+
     @property
     def input_port(self):
         return self._input_port
