@@ -587,7 +587,8 @@ class PipeItem(QtWidgets.QGraphicsPathItem):
         self._active = False
         self._highlight = False
         self.set_pipe_styling(color=self.color, width=2, style=self.style)
-        self._draw_direction_pointer()
+        self._dir_pointer.setVisible(False)
+        #self._draw_direction_pointer()
 
     def set_connections(self, port1, port2):
         """
