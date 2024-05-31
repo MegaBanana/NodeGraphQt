@@ -274,6 +274,12 @@ class PipeItem(QtWidgets.QGraphicsPathItem):
             self.setPath(path)
         elif self.viewer_pipe_layout() == PipeLayoutEnum.ANGLE.value:          
 
+            start_port_distance_x = start_port.node.boundingRect().center().x() - start_port.x()
+            start_port_distance_y = start_port.node.boundingRect().center().y() - start_port.y()
+            
+            end_port_distance_x = end_port.node.boundingRect().center().x() - end_port.x()
+            end_port_distance_y = end_port.node.boundingRect().center().y() - end_port.y()
+
             # start at p1
             path.lineTo(pos1)
 
@@ -290,8 +296,8 @@ class PipeItem(QtWidgets.QGraphicsPathItem):
             mid_point_y = (pos1.y() + pos2.y()) / 2
 
             
-            if ((simple_distance_y > 0 and start_port.port_type == PortTypeEnum.OUT.value) or
-                (simple_distance_y < 0 and start_port.port_type == PortTypeEnum.IN.value)):
+            if ((simple_distance_y > 0 and start_port_distance_x > 0) or
+                (simple_distance_y < 0 and start_port_distance_x < 0 )):
                     
                 # this is the simplest case
                 path.lineTo(QtCore.QPointF(pos1.x(), mid_point_y))
@@ -358,17 +364,26 @@ class PipeItem(QtWidgets.QGraphicsPathItem):
             # the other case is simpler, where the output port x value is 
             # smaller than the input port
 
-            
+            start_port_distance_x = start_port.node.boundingRect().center().x() - start_port.x() 
+            start_port_distance_y = start_port.node.boundingRect().center().y() - start_port.y()
+            end_port_distance_x = end_port.node.boundingRect().center().x() - end_port.x() 
+            end_port_distance_y = end_port.node.boundingRect().center().y() - end_port.y()
+            # print("{} -> {} : ({:.2f}, {:.2f})  ({:.2f}, {:.2f})".format(start_port.node.name,
+            #                                                             end_port.node.name,
+            #                                                             start_port.x(),
+            #                                                             start_port.y(),
+            #                                                             end_port.x(),
+            #                                                             end_port.y()
+            #                                                             ))
             # first calculate the simple x-distance
             simple_distance_x = pos2.x() - pos1.x()
             mid_point_x = (pos1.x() + pos2.x()) / 2
             mid_point_y = (pos1.y() + pos2.y()) / 2
 
-
             
-            if end_port.port_type != start_port.port_type:
-                if ((simple_distance_x > 0 and start_port.port_type == PortTypeEnum.OUT.value) or
-                    (simple_distance_x < 0 and start_port.port_type == PortTypeEnum.IN.value)):
+            if (start_port_distance_x > 0 and end_port_distance_x < 0) or (start_port_distance_x < 0 and end_port_distance_x > 0) :
+                if ((simple_distance_x > 0 and start_port_distance_x < 0 ) or
+                    (simple_distance_x < 0 and start_port_distance_x > 0)):
                         
                     # this is the simplest case
                     path.lineTo(QtCore.QPointF(mid_point_x , pos1.y()))
@@ -376,14 +391,16 @@ class PipeItem(QtWidgets.QGraphicsPathItem):
                     path.lineTo(QtCore.QPointF(pos2))
                         
                 else:
-                    
+                    if (start_port_distance_x < 0 and end_port_distance_x > 0) :
+                        offset = -offset
                     # we need a slightly more complex circuit but not too bad
                     path.lineTo(QtCore.QPointF(pos1.x() - offset, pos1.y()))
                     path.lineTo(QtCore.QPointF(pos1.x() - offset, mid_point_y))
                     path.lineTo(QtCore.QPointF(pos2.x() + offset, mid_point_y))
                     path.lineTo(QtCore.QPointF(pos2.x() + offset, pos2.y()))
+
             else:
-                if start_port.port_type == PortTypeEnum.OUT.value:
+                if start_port_distance_x < 0:
                     if simple_distance_x > 0:
                         path.lineTo(QtCore.QPointF(pos2.x() + offset, pos1.y()))
                         path.lineTo(QtCore.QPointF(pos2.x() + offset, pos2.y()))
@@ -391,7 +408,7 @@ class PipeItem(QtWidgets.QGraphicsPathItem):
                         # we need a slightly more complex circuit but not too bad
                         path.lineTo(QtCore.QPointF(pos1.x() + offset, pos1.y()))
                         path.lineTo(QtCore.QPointF(pos1.x() + offset, pos2.y()))
-                elif start_port.port_type == PortTypeEnum.IN.value:
+                elif start_port_distance_x > 0 :
                     if simple_distance_x < 0:
                         path.lineTo(QtCore.QPointF(pos2.x() - offset, pos1.y()))
                         path.lineTo(QtCore.QPointF(pos2.x() - offset, pos2.y()))
