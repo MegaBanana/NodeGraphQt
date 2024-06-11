@@ -364,17 +364,26 @@ class PipeItem(QtWidgets.QGraphicsPathItem):
             # the other case is simpler, where the output port x value is 
             # smaller than the input port
 
-            start_port_distance_x = start_port.node.boundingRect().center().x() - start_port.x() 
-            start_port_distance_y = start_port.node.boundingRect().center().y() - start_port.y()
-            end_port_distance_x = end_port.node.boundingRect().center().x() - end_port.x() 
-            end_port_distance_y = end_port.node.boundingRect().center().y() - end_port.y()
-            # print("{} -> {} : ({:.2f}, {:.2f})  ({:.2f}, {:.2f})".format(start_port.node.name,
-            #                                                             end_port.node.name,
-            #                                                             start_port.x(),
-            #                                                             start_port.y(),
-            #                                                             end_port.x(),
-            #                                                             end_port.y()
-            #                                                             ))
+            # Position of the port relative to the center of the node:
+            #  < 0 : port on the left part of the node
+            #  > 0 : port on the right part of the node
+            start_port_distance_x = (start_port.x() + start_port.boundingRect().width() / 2) - start_port.node.boundingRect().center().x()
+            start_port_distance_y = (start_port.y() + start_port.boundingRect().width() / 2) - start_port.node.boundingRect().center().y()
+
+            end_port_distance_x = (end_port.x() + end_port.boundingRect().width() / 2) - end_port.node.boundingRect().center().x() 
+            end_port_distance_y = (end_port.y() + end_port.boundingRect().height() /2) - end_port.node.boundingRect().center().y()
+            # print("{} -> {} : ({:.2f}, {:.2f})  ({:.2f}, {:.2f}) ({:.2f}, {:.2f}) ({:.2f}, {:.2f})".format(
+            #                                                              start_port.node.name,
+            #                                                              end_port.node.name,
+            #                                                              start_port.x(),
+            #                                                              start_port.y(),
+            #                                                              end_port.x(),
+            #                                                              end_port.y(),
+            #                                                              start_port_distance_x,
+            #                                                              start_port_distance_y,
+            #                                                              end_port_distance_x,
+            #                                                              end_port_distance_y
+            #                                                              ))
             # first calculate the simple x-distance
             simple_distance_x = pos2.x() - pos1.x()
             mid_point_x = (pos1.x() + pos2.x()) / 2
@@ -382,16 +391,18 @@ class PipeItem(QtWidgets.QGraphicsPathItem):
 
             
             if (start_port_distance_x > 0 and end_port_distance_x < 0) or (start_port_distance_x < 0 and end_port_distance_x > 0) :
-                if ((simple_distance_x > 0 and start_port_distance_x < 0 ) or
-                    (simple_distance_x < 0 and start_port_distance_x > 0)):
-                        
+                
+                if ((simple_distance_x > 0 and start_port_distance_x > 0 ) or
+                    (simple_distance_x < 0 and start_port_distance_x < 0)):
+                    # port are facing each other 
                     # this is the simplest case
                     path.lineTo(QtCore.QPointF(mid_point_x , pos1.y()))
                     path.lineTo(QtCore.QPointF(mid_point_x , pos2.y()))
                     path.lineTo(QtCore.QPointF(pos2))
                         
                 else:
-                    if (start_port_distance_x < 0 and end_port_distance_x > 0) :
+                    # ports are at the external side of each other
+                    if (start_port_distance_x > 0 and end_port_distance_x < 0) :
                         offset = -offset
                     # we need a slightly more complex circuit but not too bad
                     path.lineTo(QtCore.QPointF(pos1.x() - offset, pos1.y()))
@@ -400,7 +411,8 @@ class PipeItem(QtWidgets.QGraphicsPathItem):
                     path.lineTo(QtCore.QPointF(pos2.x() + offset, pos2.y()))
 
             else:
-                if start_port_distance_x < 0:
+                # ports are from different sides of nodes : left and right or right and left
+                if start_port_distance_x > 0:
                     if simple_distance_x > 0:
                         path.lineTo(QtCore.QPointF(pos2.x() + offset, pos1.y()))
                         path.lineTo(QtCore.QPointF(pos2.x() + offset, pos2.y()))
@@ -408,7 +420,7 @@ class PipeItem(QtWidgets.QGraphicsPathItem):
                         # we need a slightly more complex circuit but not too bad
                         path.lineTo(QtCore.QPointF(pos1.x() + offset, pos1.y()))
                         path.lineTo(QtCore.QPointF(pos1.x() + offset, pos2.y()))
-                elif start_port_distance_x > 0 :
+                elif start_port_distance_x < 0 :
                     if simple_distance_x < 0:
                         path.lineTo(QtCore.QPointF(pos2.x() - offset, pos1.y()))
                         path.lineTo(QtCore.QPointF(pos2.x() - offset, pos2.y()))
