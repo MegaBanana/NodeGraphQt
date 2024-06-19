@@ -46,6 +46,8 @@ class NodeItem(AbstractNodeItem):
         self._widgets = OrderedDict()
         self._proxy_mode = False
         self._proxy_mode_threshold = 70
+        self._icon_visibility = True
+        self._items_text_visibility = True
 
     def post_init(self, viewer, pos=None):
         """
@@ -780,15 +782,15 @@ class NodeItem(AbstractNodeItem):
         # input port text visibility.
         for port, text in self._input_items.items():
             if port.display_name:
-                text.setVisible(port_text_visible)
+                text.setVisible(port_text_visible and self._items_text_visibility)
 
         # output port text visibility.
         for port, text in self._output_items.items():
             if port.display_name:
-                text.setVisible(port_text_visible)
+                text.setVisible(port_text_visible and self._items_text_visibility)
 
         self._text_item.setVisible(visible)
-        self._icon_item.setVisible(visible)
+        self._icon_item.setVisible(visible and self._icon_visibility)
 
     @property
     def icon(self):
