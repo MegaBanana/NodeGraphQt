@@ -106,7 +106,7 @@ class PipeItem(QtWidgets.QGraphicsPathItem):
                 pen.setStyle(PIPE_STYLES.get(PipeEnum.DRAW_TYPE_DOTTED.value))
                 pen.setWidth(3)
 
-        elif self.animated:
+        if self.animated:
             pen.setStyle(PIPE_STYLES.get(PipeEnum.DRAW_TYPE_DASHED.value))
             pen.setDashOffset(self.animation_offset)
 
